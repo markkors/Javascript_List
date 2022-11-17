@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lijst met gebruikers</title>
+    <style>
+        body {
+            font-family: Arial;
+        }
+
+        input {
+            display: block;
+            margin: 5px 0;
+        }
+
+        .record {
+            display: flex;
+            border-bottom: 1px solid;
+        }
+
+        .record > * {
+            flex:1;
+
+        }
+
+        .record:nth-child(odd) {
+            background-color: aliceblue;
+        }
+
+        .record:nth-child(even) {
+            background-color: beige;
+        }
+
+        .container {
+            margin: 10px;
+        }
+
+
+        .delete:hover, .edit:hover {
+            color:red;
+        }
+    </style>
+    <script src="cookies.js"></script>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+<body>
+
+    <h1>The list of users...</h1>
+
+    <div class="container" id="container_list">
+    </div>
+
+    <div class="container" id="add_edit_user">
+        <form name="frm_add_edit">
+            <input type="text" name="first" placeholder="voornaam">
+            <input type="text" name="last" placeholder="achternaam">
+            <input type="submit" name="submit" value="Toevoegen">
+        </form>
+    </div>
+
+
+<script>
+
+    let userlist = [];
+    let item_to_edit = null;
+
+    document.addEventListener("DOMContentLoaded",function() {
+        showusers()
+    });
+
+    document.frm_add_edit.addEventListener("submit",function (event) {
+        event.preventDefault();
+        adduser();
+    })
+
+    function showusers() {
+        let value = getCookie("users");
+        if(!(value== undefined || value == null || value == "")) {
+            userlist = JSON.parse(value);
+        }
+
+        let parent = document.getElementById("container_list");
+        // delete all users from list
+        while(parent.lastElementChild) {
+            parent.removeChild(parent.lastElementChild);
+        }
+
+        let i=0
+        if(userlist.length>0) {
+            userlist.forEach(function(item) {
+                let user_element = document.createElement("div");
+                user_element.setAttribute("class","record");
+                user_element.setAttribute("index",i)
+
+                let d = document.createElement("div");
+                d.innerHTML = "<span class=\"material-symbols-outlined\">delete</span>";
+                d.setAttribute("class","delete");
+                d.addEventListener("click",function(e) {
+                    doDelete((e));
+                });
+                user_element.appendChild(d);
+
+                d = document.createElement("div");
+                d.innerHTML = "<span class=\"material-symbols-outlined\">edit</span>";
+                d.setAttribute("class","edit");
+                d.addEventListener("click",function(e) {
+                    doEdit((e));
+                });
+                user_element.appendChild(d);
+
+                fn = document.createElement("div");
+                fn.innerText = item.first;
+                ln = document.createElement("div");
+                ln.innerText = item.last;
+
+                user_element.appendChild(fn);
+                user_element.appendChild(ln);
+                parent.appendChild(user_element);
+                i++;
+            });
+        }
+    }
+
+    function adduser(idx) {
+        let user = {"index": null,"first":null,"last":null};
+        user.first = document.frm_add_edit.first.value;
+        user.last = document.frm_add_edit.last.value;
+
+
+        if(item_to_edit!=null) {
+            userlist[item_to_edit] = user;
+            item_to_edit=null;
+            document.frm_add_edit.submit.value = "Toevoegen";
+        } else {
+            user.index = userlist.length;
+            userlist.push(user);
+        }
+
+        console.log(userlist);
+        document.frm_add_edit.reset();
+        setCookie("users",JSON.stringify(userlist),1);
+        showusers();
+    }
+
+    function doDelete(e) {
+        let index = e.target.parentElement.parentElement.getAttribute("index");
+        userlist.splice(index,1);
+        setCookie("users",JSON.stringify(userlist),1);
+        showusers();
+    }
+
+
+    function doEdit(e) {
+        let index = e.target.parentElement.parentElement.getAttribute("index");
+        item_to_edit = index;
+
+        document.frm_add_edit.first.value = userlist[index].first;
+        document.frm_add_edit.last.value =userlist[index].last;
+        document.frm_add_edit.submit.value = "Update";
+    }
+</script>
+
+</body>
+</html>
